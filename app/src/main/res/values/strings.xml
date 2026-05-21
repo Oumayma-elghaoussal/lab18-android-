@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">GEtudiant</string>
-    <string-array name="villes">
-        <item>Marrakech</item>
-        <item>Rabat</item>
-        <item>Casablanca</item>
-        <item>Fès</item>
-        <item>Tanger</item>
-        <item>Agadir</item>
-    </string-array>
+    <string name="app_name">NavifationDrawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_gallery">Gallery</string>
+    <string name="nav_slideshow">Slideshow</string>
+    <string name="nav_tools">Tools</string>
+    <string name="nav_share">Share</string>
+    <string name="nav_send">Send</string>
 </resources>
