@@ -1,0 +1,31 @@
+R_DEF: Internal format may change without notice
+local
+array villes
+color black
+color colorAccent
+color colorPrimary
+color colorPrimaryDark
+color green_dark
+color ic_launcher_background
+color white
+drawable ic_launcher_foreground
+id add
+id btnList
+id f
+id itemNomPrenom
+id itemVilleSexe
+id listView
+id m
+id nom
+id prenom
+id ville
+layout activity_add_etudiant
+layout activity_list_etudiant
+layout item_etudiant
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.ProjetWS
+style input
+style text
+xml network_security_config

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">GEtudiant</string>
+    <string-array name="villes">
+        <item>Marrakech</item>
+        <item>Rabat</item>
+        <item>Casablanca</item>
+        <item>Fès</item>
+        <item>Tanger</item>
+        <item>Agadir</item>
+    </string-array>
+</resources>
