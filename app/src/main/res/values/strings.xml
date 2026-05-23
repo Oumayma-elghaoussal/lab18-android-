@@ -1,38 +1,17 @@
 <resources>
-    <string name="app_name">Lab14 – Storage</string>
+    <string name="app_name">Lab15 – SQLite Étudiants</string>
 
-    <!-- SharedPreferences -->
-    <string name="section_prefs">1 — SharedPreferences</string>
-    <string name="hint_key">Clé</string>
-    <string name="hint_value">Valeur</string>
-    <string name="btn_save_pref">Sauvegarder (apply)</string>
-    <string name="btn_load_pref">Charger</string>
-    <string name="pref_result">Résultat : %s</string>
+    <!-- Formulaire -->
+    <string name="hint_id">ID (pour chercher/supprimer)</string>
+    <string name="hint_nom">Nom</string>
+    <string name="hint_prenom">Prénom</string>
 
-    <!-- EncryptedSharedPreferences -->
-    <string name="section_encrypted">2 — EncryptedSharedPreferences</string>
-    <string name="hint_token">Token / Secret</string>
-    <string name="btn_save_token">Chiffrer &amp; Sauvegarder</string>
-    <string name="btn_load_token">Déchiffrer &amp; Lire</string>
+    <!-- Boutons -->
+    <string name="btn_ajouter">Ajouter</string>
+    <string name="btn_chercher">Chercher par ID</string>
+    <string name="btn_supprimer">Supprimer par ID</string>
+    <string name="btn_afficher_tous">Afficher tous</string>
 
-    <!-- Internal File -->
-    <string name="section_file">3 — Fichier interne (texte / JSON)</string>
-    <string name="hint_file_content">Contenu du fichier</string>
-    <string name="btn_write_file">Écrire fichier</string>
-    <string name="btn_read_file">Lire fichier</string>
-    <string name="btn_write_json">Écrire JSON</string>
-    <string name="btn_read_json">Lire JSON</string>
-
-    <!-- Cache -->
-    <string name="section_cache">4 — Cache temporaire</string>
-    <string name="btn_write_cache">Écrire dans cache</string>
-    <string name="btn_purge_cache">Purger le cache</string>
-
-    <!-- External -->
-    <string name="section_external">5 — Export externe (app-specific)</string>
-    <string name="btn_export">Exporter vers externe</string>
-
-    <!-- Security -->
-    <string name="section_security">6 — Checklist sécurité</string>
-    <string name="btn_check_security">Vérifier sécurité</string>
+    <!-- Résultat -->
+    <string name="label_resultat">Résultat :</string>
 </resources>

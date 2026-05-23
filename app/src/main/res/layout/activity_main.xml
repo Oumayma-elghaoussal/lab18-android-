@@ -11,171 +11,128 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- SECTION 1 — SharedPreferences -->
+        <!-- ── Carte : Formulaire ── -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_prefs" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <EditText android:id="@+id/etPrefKey" android:hint="@string/hint_key"
-                    android:inputType="text" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="4dp"/>
-                <EditText android:id="@+id/etPrefValue" android:hint="@string/hint_value"
-                    android:inputType="text" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
-                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp">
-                    <Button android:id="@+id/btnSavePref" android:text="@string/btn_save_pref"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginEnd="4dp"/>
-                    <Button android:id="@+id/btnLoadPref" android:text="@string/btn_load_pref"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Gestion des Étudiants"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp" />
+
+                <EditText
+                    android:id="@+id/etId"
+                    android:hint="@string/hint_id"
+                    android:inputType="number"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/etNom"
+                    android:hint="@string/hint_nom"
+                    android:inputType="textPersonName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/etPrenom"
+                    android:hint="@string/hint_prenom"
+                    android:inputType="textPersonName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Boutons -->
+                <Button
+                    android:id="@+id/btnAjouter"
+                    android:text="@string/btn_ajouter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/btnChercher"
+                        android:text="@string/btn_chercher"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                    <Button
+                        android:id="@+id/btnSupprimer"
+                        android:text="@string/btn_supprimer"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
                 </LinearLayout>
-                <TextView android:id="@+id/tvPrefResult" android:text="Résultat : —"
-                    android:textSize="14sp" android:textColor="#555"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+                <Button
+                    android:id="@+id/btnAfficherTous"
+                    android:text="@string/btn_afficher_tous"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.TextButton" />
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- SECTION 2 — EncryptedSharedPreferences -->
+        <!-- ── Carte : Résultat ── -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_encrypted" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <EditText android:id="@+id/etToken" android:hint="@string/hint_token"
-                    android:inputType="textPassword" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
-                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp">
-                    <Button android:id="@+id/btnSaveToken" android:text="@string/btn_save_token"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginEnd="4dp"/>
-                    <Button android:id="@+id/btnLoadToken" android:text="@string/btn_load_token"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-                </LinearLayout>
-                <TextView android:id="@+id/tvTokenResult" android:text="Résultat : —"
-                    android:textSize="14sp" android:textColor="#555"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
 
-        <!-- SECTION 3 — Fichier interne -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_file" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <EditText android:id="@+id/etFileContent" android:hint="@string/hint_file_content"
-                    android:inputType="textMultiLine" android:minLines="3" android:gravity="top|start"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <Button android:id="@+id/btnWriteFile" android:text="@string/btn_write_file"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginEnd="4dp"/>
-                    <Button android:id="@+id/btnReadFile" android:text="@string/btn_read_file"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-                </LinearLayout>
-                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp">
-                    <Button android:id="@+id/btnWriteJson" android:text="@string/btn_write_json"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginEnd="4dp"/>
-                    <Button android:id="@+id/btnReadJson" android:text="@string/btn_read_json"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-                </LinearLayout>
-                <TextView android:id="@+id/tvFileResult" android:text="Résultat : —"
-                    android:textSize="14sp" android:textColor="#555"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-        <!-- SECTION 4 — Cache temporaire -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_cache" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="8dp">
-                    <Button android:id="@+id/btnWriteCache" android:text="@string/btn_write_cache"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginEnd="4dp"/>
-                    <Button android:id="@+id/btnPurgeCache" android:text="@string/btn_purge_cache"
-                        android:layout_width="0dp" android:layout_weight="1"
-                        android:layout_height="wrap_content" android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-                </LinearLayout>
-                <TextView android:id="@+id/tvCacheResult" android:text="Résultat : —"
-                    android:textSize="14sp" android:textColor="#555"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:text="@string/label_resultat"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
 
-        <!-- SECTION 5 — Export externe -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_external" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <Button android:id="@+id/btnExport" android:text="@string/btn_export"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <TextView android:id="@+id/tvExportResult" android:text="Résultat : —"
-                    android:textSize="14sp" android:textColor="#555"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/tvResultat"
+                    android:text="—"
+                    android:textSize="14sp"
+                    android:textColor="#333"
+                    android:lineSpacingExtra="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
-        <!-- SECTION 6 — Checklist sécurité -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
-            <LinearLayout android:orientation="vertical" android:padding="16dp"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="@string/section_security" android:textSize="16sp"
-                    android:textStyle="bold" android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <Button android:id="@+id/btnCheckSecurity" android:text="@string/btn_check_security"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
-                <TextView android:id="@+id/tvSecurityResult" android:text=""
-                    android:textSize="13sp" android:textColor="#333" android:lineSpacingExtra="4dp"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
