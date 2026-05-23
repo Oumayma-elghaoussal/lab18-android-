@@ -8,7 +8,7 @@ color ic_launcher_background
 color white
 drawable ic_launcher_foreground
 id btnMap
-id map
+id osmMap
 id tvLat
 id tvLon
 layout activity_main
