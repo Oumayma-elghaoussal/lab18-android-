@@ -1,221 +1,31 @@
-# LAB 16 — Maîtriser les Services dans une Application Android
+# LAB 17 — Maîtriser les BroadcastReceiver en Android
 
-## Objectifs du lab
 
-| # | Objectif |
-|---|----------|
-| 1 | Créer un **Foreground Service** (obligatoire depuis Android 8.0) |
-| 2 | Afficher une **notification persistante** avec le temps en direct |
-| 3 | Utiliser un **Bound Service** pour communiquer avec l'Activity |
-| 4 | **Démarrage / arrêt** depuis l'interface |
-| 5 | Comprendre le **cycle de vie** des Services, `onStartCommand`, `onBind`, `START_STICKY` |
+Objectifs du lab
+Apprendre à créer et utiliser les BroadcastReceiver (composants qui réagissent aux événements diffusés par le système ou par votre app).
+Vous allez réaliser une application ReceiverDemo qui :
+Utilise un Receiver dynamique pour détecter le changement de mode avion (ACTION_AIRPLANE_MODE_CHANGED)
+Utilise un Receiver statique pour BOOT_COMPLETED (démarrage du téléphone)
+Envoie et reçoit un Broadcast custom depuis l’Activity
+Comprend la différence Statique vs Dynamique, le cycle de vie (onReceive), les permissions et les restrictions Android 14/15/16 (exported, background limits, etc.)
+À la fin vous saurez exactement comment fonctionnent les notifications système (batterie, WiFi, SMS, etc.) et les broadcasts internes.
 
----
+Créer le projet : 
 
-## Architecture du projet
+<img width="1652" height="870" alt="image" src="https://github.com/user-attachments/assets/89ec1c56-4506-4975-9aa0-b79a785fe245" />
 
-```
-app/src/main/java/com/example/hellotoast/
-├── ChronoService.java     ← Foreground + Bound Service (chronomètre)
-└── MainActivity.java      ← Interface de contrôle
 
-app/src/main/res/
-├── layout/activity_main.xml   ← UI (timer + boutons start/stop)
-└── values/
-    ├── strings.xml
-    ├── colors.xml
-    └── themes.xml
-```
+<img width="1635" height="875" alt="image" src="https://github.com/user-attachments/assets/90a48dca-3f6e-461c-b8b1-2fcbd2160f8e" />
 
----
 
-## Concepts clés expliqués
+<img width="1247" height="1020" alt="image" src="https://github.com/user-attachments/assets/d062b178-b474-43b5-b732-42ab4711392d" />
 
-### 1. Foreground Service (obligatoire depuis Android 8.0)
 
-Depuis **Android 8.0 (API 26)**, un service qui tourne en arrière-plan **doit** afficher une notification. Sinon, le système le tue après quelques secondes.
+interface 
 
-```java
-// Lancer un Foreground Service
-ContextCompat.startForegroundService(this, intent);
+<img width="639" height="1023" alt="image" src="https://github.com/user-attachments/assets/45793671-2bb0-478f-b96f-21cfad1bf0a4" />
 
-// Dans le Service (dans les 5 premières secondes !)
-startForeground(NOTIFICATION_ID, notification);
-```
 
-### 2. `onStartCommand()` et `START_STICKY`
+<img width="643" height="1024" alt="image" src="https://github.com/user-attachments/assets/60249b5e-9c98-455b-9642-3db74d6cd7bd" />
 
-```java
-@Override
-public int onStartCommand(Intent intent, int flags, int startId) {
-    startForeground(NOTIFICATION_ID, buildNotification("00:00:00"));
-    startTimer();
-    return START_STICKY;  // Le système relance le service s'il est tué
-}
-```
 
-| Valeur de retour | Comportement |
-|---|---|
-| `START_STICKY` | Relancé automatiquement (intent = null) |
-| `START_NOT_STICKY` | Pas relancé |
-| `START_REDELIVER_INTENT` | Relancé avec le dernier Intent |
-
-### 3. Bound Service (communication Activity ↔ Service)
-
-Le pattern **Binder** permet à l'Activity d'appeler directement les méthodes du Service :
-
-```java
-// Dans le Service
-public class ChronoBinder extends Binder {
-    public ChronoService getService() {
-        return ChronoService.this;
-    }
-}
-
-@Override
-public IBinder onBind(Intent intent) {
-    return binder;
-}
-
-// Dans l'Activity
-bindService(intent, connection, Context.BIND_AUTO_CREATE);
-// → connection.onServiceConnected() reçoit le Binder
-```
-
-### 4. Notification Channel (obligatoire depuis Android 8.0)
-
-```java
-NotificationChannel channel = new NotificationChannel(
-    CHANNEL_ID,
-    "Chronomètre",
-    NotificationManager.IMPORTANCE_LOW  // pas de son
-);
-notificationManager.createNotificationChannel(channel);
-```
-
-### 5. Permission POST_NOTIFICATIONS (Android 13+)
-
-Depuis **Android 13 (API 33)**, il faut demander la permission à l'exécution :
-
-```xml
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-```
-
----
-
-## Cycle de vie du Service
-
-```
-startForegroundService()
-    ↓
-onCreate()  ← créé une seule fois
-    ↓
-onStartCommand()  ← à chaque startService()
-    ↓                 retourne START_STICKY
-[Service tourne en Foreground avec notification]
-    ↓
-bindService() → onBind() → Activity reçoit le Binder
-    ↓
-[Communication directe Activity ↔ Service]
-    ↓
-unbindService() → onUnbind()
-    ↓
-stopService() → onDestroy()
-```
-
----
-
-## Fichiers détaillés
-
-### `ChronoService.java`
-
-| Méthode | Rôle |
-|---|---|
-| `onCreate()` | Crée le Handler et le NotificationChannel |
-| `onStartCommand()` | Lance `startForeground()` + démarre le timer |
-| `onBind()` | Retourne le `ChronoBinder` à l'Activity |
-| `onUnbind()` | Supprime le listener |
-| `onDestroy()` | Arrête le timer |
-| `startTimer()` | Planifie un Runnable toutes les secondes |
-| `stopTimer()` | Annule le Runnable |
-| `buildNotification()` | Construit la notification avec le temps actuel |
-| `setOnTickListener()` | API pour l'Activity (callback chaque seconde) |
-
-### `MainActivity.java`
-
-| Méthode | Rôle |
-|---|---|
-| `startChronoService()` | `startForegroundService()` + `bindService()` |
-| `stopChronoService()` | `unbindService()` + `stopService()` |
-| `onStart()` | Tente de se lier au service (s'il tourne déjà) |
-| `onStop()` | Se délie (le service continue en Foreground) |
-| `ServiceConnection` | Reçoit le Binder, configure le tick listener |
-
----
-
-## Permissions
-
-```xml
-<!-- Foreground Service (API 28+) -->
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-<!-- Notifications (API 33+) -->
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-```
-
----
-
-## Comment tester
-
-1. **Lancez** l'app sur émulateur ou appareil (API 26+)
-2. Cliquez **DÉMARRER SERVICE** → la notification apparaît, le chrono tourne
-3. **Quittez l'app** complètement (bouton retour ou swipe) → le service **continue**
-4. Ouvrez le **tiroir de notifications** → le temps continue à défiler
-5. Cliquez sur la notification → retour dans l'app, le chrono est synchronisé
-6. Cliquez **ARRÊTER SERVICE** → tout s'arrête proprement
-
-### Vérification Logcat
-
-Filtrez par tag `ChronoService` ou `MainActivity` :
-
-```
-I/ChronoService: onCreate() — Service créé
-I/ChronoService: NotificationChannel créé : chrono_channel
-I/ChronoService: onStartCommand() — startId=1, flags=0
-I/ChronoService: Timer démarré
-I/ChronoService: onBind() — Activity liée au service
-I/MainActivity: onServiceConnected — lié au service
-...
-I/MainActivity: Bouton ARRÊTER cliqué
-I/ChronoService: onUnbind() — Activity déliée
-I/ChronoService: onDestroy() — Service détruit
-I/ChronoService: Timer arrêté
-```
-
----
-
-## Dépendances
-
-**Aucune dépendance externe** — les Services et Notifications sont natifs Android.
-
-```groovy
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-}
-```
-
----
-
-## Bonnes pratiques appliquées
-
-| Pratique | Détail |
-|---|---|
-| ✅ `startForeground()` immédiat | Dans les 5 premières secondes (sinon crash) |
-| ✅ `START_STICKY` | Relancé si tué par le système |
-| ✅ Notification `IMPORTANCE_LOW` | Pas de son à chaque mise à jour |
-| ✅ `setOnlyAlertOnce(true)` | Évite le bip répété |
-| ✅ `PendingIntent.FLAG_IMMUTABLE` | Requis depuis API 31 |
-| ✅ Unbind dans `onStop()` | Évite les fuites de mémoire |
-| ✅ Permission runtime (API 33) | `POST_NOTIFICATIONS` demandée au clic |
