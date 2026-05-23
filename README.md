@@ -1,29 +1,27 @@
-<<<<<<< HEAD
-# LAB 12 — GPS et Map (Google Maps Activity)
+# LAB 14 — Sauvegarde des données : SharedPreferences et fichiers
 
-## 📋 Objectifs
+## Objectifs d'apprentissage
 
-- Afficher une **Google Map** dans l'application
-- Demander la **permission de localisation** à l'exécution
-- Écouter les changements de position via **Network** et **GPS** providers
-- Ajouter un **marker** à chaque nouvelle position détectée
-- Si le GPS est désactivé : afficher une **boîte de dialogue** pour l'activer
-- **Zoomer** automatiquement sur la position courante
+| # | Objectif |
+|---|----------|
+| 1 | Écrire et lire des préférences via **SharedPreferences** (`apply` vs `commit`) |
+| 2 | Stocker un secret (token) chiffré via **EncryptedSharedPreferences** + **MasterKey** |
+| 3 | Écrire et lire des **fichiers internes** (texte UTF-8, JSON simple) |
+| 4 | Utiliser un **cache temporaire** (`cacheDir`) et le purger |
+| 5 | **Exporter** un fichier vers l'**externe app-specific** et comprendre les permissions |
+| 6 | Appliquer une **checklist sécurité** (logs, MODE_PRIVATE, nettoyage, rotation de token) |
 
 ---
 
-## 🏗️ Architecture du projet
+## Architecture du projet
 
 ```
 app/src/main/
-├── AndroidManifest.xml               # Permissions + API Key Google Maps
+├── AndroidManifest.xml
 ├── java/com/example/hellotoast/
-│   └── MapsActivity.java             # Activité Maps + LocationListener
+│   └── MainActivity.java          ← Logique complète (6 sections)
 └── res/
-    ├── layout/
-    │   └── activity_maps.xml          # SupportMapFragment + info card
-    ├── drawable/
-    │   └── ic_launcher_foreground.xml
+    ├── layout/activity_main.xml   ← UI ScrollView avec 6 cartes Material
     └── values/
         ├── strings.xml
         ├── colors.xml
@@ -32,120 +30,177 @@ app/src/main/
 
 ---
 
-## 🔑 Configuration de la clé API Google Maps
+## Dépendances
 
-### Étape 1 — Obtenir une clé API
-
-1. Aller sur [Google Cloud Console](https://console.cloud.google.com/)
-2. Créer un projet ou en sélectionner un existant
-3. Activer l'API **Maps SDK for Android**
-4. Aller dans **APIs & Services → Credentials**
-5. Cliquer sur **Create Credentials → API Key**
-6. Copier la clé
-
-### Étape 2 — Insérer la clé dans le projet
-
-Ouvrir `AndroidManifest.xml` et remplacer `YOUR_API_KEY_HERE` :
-
-```xml
-<meta-data
-    android:name="com.google.android.geo.API_KEY"
-    android:value="VOTRE_CLE_API_ICI" />
-```
-
-> ⚠️ **Sans clé API valide, la carte affichera un écran gris/vide.**
-
----
-
-## 📱 Fonctionnalités
-
-| Fonctionnalité | Description |
-|----------------|-------------|
-| **Google Map** | Carte plein écran avec `SupportMapFragment` |
-| **Permission runtime** | Demande `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION` |
-| **GPS Provider** | Écoute les positions du capteur GPS (marker 🔴 rouge) |
-| **Network Provider** | Écoute les positions réseau/WiFi (marker 🔵 bleu) |
-| **Dialog GPS** | Si GPS désactivé → popup proposant d'ouvrir les paramètres |
-| **Zoom auto** | `animateCamera` zoom niveau 16 sur chaque nouvelle position |
-| **Info panel** | Card flottante en bas : numéro position, lat/lng, provider |
-
----
-
-## 🔧 Technologies utilisées
-
-| Composant | Technologie |
-|-----------|-------------|
-| Carte | Google Maps SDK (`play-services-maps:18.2.0`) |
-| Localisation | `LocationManager` (GPS_PROVIDER + NETWORK_PROVIDER) |
-| UI | Material Components (MaterialCardView) |
-| Permissions | Runtime permissions (Android 6+) |
-
----
-
-## 🔒 Permissions Android
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+```groovy
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    // Chiffrement
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+}
 ```
 
 ---
 
-## 🚀 Comment exécuter
+## Section 1 — SharedPreferences (`apply` vs `commit`)
 
-1. **Configurer la clé API** dans `AndroidManifest.xml` (voir ci-dessus)
-2. Ouvrir le projet dans **Android Studio**
-3. **Sync Gradle** → **Run**
-4. Sur l'émulateur : aller dans **Extended controls (⋯) → Location** pour simuler une position GPS
-5. L'application :
-   - Demande la permission de localisation
-   - Affiche la carte Google Maps
-   - Place un marker rouge (GPS) ou bleu (Network) à chaque position
-   - Zoome automatiquement sur la dernière position
+**Concept :**
+- `SharedPreferences` = fichier XML clé-valeur dans `/data/data/<package>/shared_prefs/`
+- `apply()` = écriture **asynchrone** (recommandé, ne bloque pas le thread UI)
+- `commit()` = écriture **synchrone** (retourne `boolean`, bloque le thread)
+
+**Code clé :**
+```java
+SharedPreferences sp = getSharedPreferences("lab14_prefs", Context.MODE_PRIVATE);
+sp.edit().putString(key, val).apply();  // asynchrone
+String val = sp.getString(key, "(introuvable)");
+```
+
+> ⚠️ **Toujours utiliser `MODE_PRIVATE`** — les autres modes (`MODE_WORLD_READABLE`, `MODE_WORLD_WRITABLE`) sont dépréciés depuis API 17.
 
 ---
 
-## 🧪 Tester sur l'émulateur
+## Section 2 — EncryptedSharedPreferences + MasterKey
 
-Pour simuler des positions GPS sur l'émulateur Android :
+**Concept :**
+- Les SharedPreferences classiques sont stockées en **clair** (XML lisible)
+- `EncryptedSharedPreferences` chiffre les **clés** (AES256-SIV) et les **valeurs** (AES256-GCM)
+- `MasterKey` gère la clé maîtresse via **Android Keystore** (hardware-backed)
 
-1. Lancer l'app sur l'émulateur
-2. Ouvrir les **Extended Controls** (bouton `⋯` dans la barre de l'émulateur)
-3. Aller dans l'onglet **Location**
-4. Entrer des coordonnées (ex: `33.9716, -6.8498` pour Rabat)
-5. Cliquer sur **Set Location**
-6. Un marker apparaît sur la carte et l'info panel se met à jour
-=======
-# lab13-android : : Localisation temps réel via GPS et Google Maps
+**Code clé :**
+```java
+MasterKey masterKey = new MasterKey.Builder(this)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build();
 
+SharedPreferences encPrefs = EncryptedSharedPreferences.create(
+        this,
+        "lab14_encrypted",
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+);
+encPrefs.edit().putString("auth_token", token).apply();
+```
 
-lancer wamp server : 
+> 🔐 Le fichier XML résultant est **illisible** même avec accès root.
 
+---
 
-<img width="719" height="337" alt="image" src="https://github.com/user-attachments/assets/de23445c-e0a4-4edb-9897-30d4a6a20249" />
+## Section 3 — Fichiers internes (texte + JSON)
 
-lancer phpMyAdmin : 
+### 3a. Fichier texte UTF-8
 
-<img width="1920" height="1021" alt="image" src="https://github.com/user-attachments/assets/ac769f7b-1142-46a3-92c9-d3f799b8cce9" />
+**Concept :**
+- `openFileOutput()` écrit dans le répertoire interne privé de l'app
+- Toujours spécifier `StandardCharsets.UTF_8` pour la portabilité
+- `MODE_PRIVATE` = le fichier n'est accessible que par l'app
 
+```java
+try (FileOutputStream fos = openFileOutput("notes.txt", Context.MODE_PRIVATE);
+     OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)) {
+    writer.write(content);
+}
+```
 
-créer une base de données : 
+### 3b. Fichier JSON
 
-<img width="1920" height="1021" alt="image" src="https://github.com/user-attachments/assets/73f6bde6-472e-490b-850f-0f7bb95b19a3" />
+**Concept :**
+- Créer un `JSONObject`, le sérialiser avec `toString(2)` (indentation)
+- Pour lire : reconstruire l'objet depuis la chaîne lue
 
+```java
+JSONObject json = new JSONObject();
+json.put("note", content);
+json.put("timestamp", "2024-01-15 14:30:00");
+json.put("version", 1);
+// Écrire json.toString(2) dans un fichier
+```
 
-Créer la table position : 
+---
 
+## Section 4 — Cache temporaire
 
-<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/0a391126-98ef-4b22-afb1-27a7d74ab0a9" />
+**Concept :**
+- `getCacheDir()` retourne un répertoire de cache interne
+- Le système **peut supprimer** ces fichiers quand l'espace est faible
+- **Bonne pratique** : purger le cache manuellement quand il n'est plus utile
 
-l'interface de google Map : 
+```java
+// Écriture
+File cacheFile = new File(getCacheDir(), "temp_cache.txt");
+// Purge
+for (File f : getCacheDir().listFiles()) f.delete();
+```
 
-<img width="647" height="1022" alt="image" src="https://github.com/user-attachments/assets/a797c3b8-c0d7-4fac-8d21-eb7b7ae887b4" />
+---
 
+## Section 5 — Export externe (app-specific)
 
-<img width="645" height="1024" alt="image" src="https://github.com/user-attachments/assets/e705888a-6366-4863-a326-bacc6a7e96bc" />
+**Concept :**
+- `getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)` = dossier **app-specific** sur le stockage externe
+- **Pas de permission** requise depuis API 19 (KitKat)
+- Les fichiers sont **supprimés** si l'app est désinstallée
+- Chemin typique : `/storage/emulated/0/Android/data/<package>/files/Documents/`
 
->>>>>>> 5370a006c2638dc0ee388f283532deb4c5096bdb
+```java
+File extDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+File exportFile = new File(extDir, "export_notes.txt");
+```
+
+---
+
+## Section 6 — Checklist sécurité
+
+| # | Point de contrôle | Statut |
+|---|---|---|
+| 1 | `MODE_PRIVATE` pour SharedPreferences | ✅ |
+| 2 | Secrets chiffrés via EncryptedSharedPreferences | ✅ |
+| 3 | Pas de `Log.d()` avec données sensibles en production | ✅ |
+| 4 | Cache nettoyé après utilisation | ✅ |
+| 5 | Fichiers internes en `MODE_PRIVATE` | ✅ |
+| 6 | Rotation de token (côté serveur) | ℹ️ Conceptuel |
+| 7 | Export app-specific (pas de `WRITE_EXTERNAL_STORAGE`) | ✅ |
+
+---
+
+## Comparatif `apply()` vs `commit()`
+
+| | `apply()` | `commit()` |
+|---|---|---|
+| **Mode** | Asynchrone | Synchrone |
+| **Retour** | `void` | `boolean` |
+| **Bloque le thread** | ❌ Non | ✅ Oui |
+| **Recommandé** | ✅ Oui | Uniquement si le résultat est critique |
+
+---
+
+## Permissions requises
+
+**Aucune permission spéciale n'est requise** pour ce lab :
+- Stockage interne = toujours accessible
+- SharedPreferences = toujours accessible
+- Stockage externe app-specific = pas de permission depuis API 19
+
+---
+
+## Comment exécuter
+
+1. Ouvrir le projet dans Android Studio
+2. Sync Gradle (la dépendance `security-crypto` sera téléchargée)
+3. Run sur émulateur ou appareil (API 26+)
+4. Tester chaque section dans l'ordre
+
+---
+
+## Concepts clés abordés
+
+- `SharedPreferences` et `apply()` vs `commit()`
+- Chiffrement avec `EncryptedSharedPreferences` et `MasterKey` (AES256)
+- I/O fichier interne avec `openFileOutput()` / `openFileInput()`
+- Sérialisation/désérialisation JSON avec `JSONObject`
+- Gestion du cache avec `getCacheDir()`
+- Stockage externe app-specific avec `getExternalFilesDir()`
+- Bonnes pratiques de sécurité Android

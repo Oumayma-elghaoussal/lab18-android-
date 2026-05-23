@@ -8,34 +8,6 @@
         android:minSdkVersion="26"
         android:targetSdkVersion="34" />
 
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
-
-    <supports-screens
-        android:anyDensity="true"
-        android:largeScreens="true"
-        android:normalScreens="true" />
-
-    <uses-feature
-        android:name="android.hardware.location.network"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.location.gps"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.wifi"
-        android:required="false" />
-
     <permission
         android:name="com.example.hellotoast.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature" />
@@ -52,10 +24,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:testOnly="true"
-        android:theme="@style/Theme.GPSMap"
-        android:usesCleartextTraffic="true" >
-
-        <!-- MainActivity = launcher (GPS screen) -->
+        android:theme="@style/Theme.Lab14Storage" >
         <activity
             android:name="com.example.hellotoast.MainActivity"
             android:exported="true" >
@@ -65,11 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- MapsActivity (OpenStreetMap) -->
-        <activity
-            android:name="com.example.hellotoast.MapsActivity"
-            android:exported="false" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

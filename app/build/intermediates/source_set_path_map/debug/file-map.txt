@@ -9,8 +9,8 @@ com.example.hellotoast.app-savedstate-1.2.1-7 C:\Users\PC\.gradle\caches\transfo
 com.example.hellotoast.app-appcompat-1.6.1-8 C:\Users\PC\.gradle\caches\transforms-3\3c3e8d87979f80077854f6234c4ddaef\transformed\appcompat-1.6.1\res
 com.example.hellotoast.app-constraintlayout-2.1.4-9 C:\Users\PC\.gradle\caches\transforms-3\4bcbdb61f70c63be020394c3ae9403e9\transformed\constraintlayout-2.1.4\res
 com.example.hellotoast.app-emoji2-1.2.0-10 C:\Users\PC\.gradle\caches\transforms-3\4cbcf27c467347a1a697d011e0391f2d\transformed\emoji2-1.2.0\res
-com.example.hellotoast.app-osmdroid-android-6.1.18-11 C:\Users\PC\.gradle\caches\transforms-3\66bba14ad24983f04874337f97ba436d\transformed\osmdroid-android-6.1.18\res
-com.example.hellotoast.app-transition-1.2.0-12 C:\Users\PC\.gradle\caches\transforms-3\700d9f4868d5349574f1902fee118be3\transformed\transition-1.2.0\res
+com.example.hellotoast.app-transition-1.2.0-11 C:\Users\PC\.gradle\caches\transforms-3\700d9f4868d5349574f1902fee118be3\transformed\transition-1.2.0\res
+com.example.hellotoast.app-security-crypto-1.1.0-alpha06-12 C:\Users\PC\.gradle\caches\transforms-3\708448baa3b9d25d880f5e8c5ffc2cb1\transformed\security-crypto-1.1.0-alpha06\res
 com.example.hellotoast.app-material-1.11.0-13 C:\Users\PC\.gradle\caches\transforms-3\74a2558674f6dcad48a387d806131537\transformed\material-1.11.0\res
 com.example.hellotoast.app-startup-runtime-1.1.1-14 C:\Users\PC\.gradle\caches\transforms-3\7ca04bd807a8b2d604d9aa5774d75240\transformed\startup-runtime-1.1.1\res
 com.example.hellotoast.app-lifecycle-viewmodel-savedstate-2.6.1-15 C:\Users\PC\.gradle\caches\transforms-3\8a9aed70d6f5afab52dfa6d369634c55\transformed\lifecycle-viewmodel-savedstate-2.6.1\res

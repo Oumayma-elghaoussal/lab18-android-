@@ -1,8 +1,38 @@
 <resources>
-    <string name="app_name">Localisation</string>
-    <string name="title_activity_maps">Map</string>
-    <string name="provider_enabled">The provider %s is now enabled</string>
-    <string name="provider_disabled">The provider %s is now disabled</string>
-    <string name="provider_new_status">The provider %1$s has now a new status %2$s</string>
-    <string name="new_location">New Location : Latitude = %1$s, Longitude = %2$s, Altitude = %3$s avec une précision de %4$s mètres </string>
+    <string name="app_name">Lab14 – Storage</string>
+
+    <!-- SharedPreferences -->
+    <string name="section_prefs">1 — SharedPreferences</string>
+    <string name="hint_key">Clé</string>
+    <string name="hint_value">Valeur</string>
+    <string name="btn_save_pref">Sauvegarder (apply)</string>
+    <string name="btn_load_pref">Charger</string>
+    <string name="pref_result">Résultat : %s</string>
+
+    <!-- EncryptedSharedPreferences -->
+    <string name="section_encrypted">2 — EncryptedSharedPreferences</string>
+    <string name="hint_token">Token / Secret</string>
+    <string name="btn_save_token">Chiffrer &amp; Sauvegarder</string>
+    <string name="btn_load_token">Déchiffrer &amp; Lire</string>
+
+    <!-- Internal File -->
+    <string name="section_file">3 — Fichier interne (texte / JSON)</string>
+    <string name="hint_file_content">Contenu du fichier</string>
+    <string name="btn_write_file">Écrire fichier</string>
+    <string name="btn_read_file">Lire fichier</string>
+    <string name="btn_write_json">Écrire JSON</string>
+    <string name="btn_read_json">Lire JSON</string>
+
+    <!-- Cache -->
+    <string name="section_cache">4 — Cache temporaire</string>
+    <string name="btn_write_cache">Écrire dans cache</string>
+    <string name="btn_purge_cache">Purger le cache</string>
+
+    <!-- External -->
+    <string name="section_external">5 — Export externe (app-specific)</string>
+    <string name="btn_export">Exporter vers externe</string>
+
+    <!-- Security -->
+    <string name="section_security">6 — Checklist sécurité</string>
+    <string name="btn_check_security">Vérifier sécurité</string>
 </resources>
