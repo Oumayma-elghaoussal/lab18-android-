@@ -1,17 +1,13 @@
 <resources>
-    <string name="app_name">Lab15 – SQLite Étudiants</string>
+    <string name="app_name">Lab16 – Chrono Service</string>
 
-    <!-- Formulaire -->
-    <string name="hint_id">ID (pour chercher/supprimer)</string>
-    <string name="hint_nom">Nom</string>
-    <string name="hint_prenom">Prénom</string>
+    <string name="btn_start">DÉMARRER SERVICE</string>
+    <string name="btn_stop">ARRÊTER SERVICE</string>
+    <string name="label_time">00:00:00</string>
+    <string name="label_status">Service arrêté</string>
 
-    <!-- Boutons -->
-    <string name="btn_ajouter">Ajouter</string>
-    <string name="btn_chercher">Chercher par ID</string>
-    <string name="btn_supprimer">Supprimer par ID</string>
-    <string name="btn_afficher_tous">Afficher tous</string>
-
-    <!-- Résultat -->
-    <string name="label_resultat">Résultat :</string>
+    <!-- Notification -->
+    <string name="notif_channel_name">Chronomètre</string>
+    <string name="notif_channel_desc">Notification du chronomètre en cours</string>
+    <string name="notif_title">Chronomètre actif</string>
 </resources>

@@ -8,6 +8,11 @@
         android:minSdkVersion="26"
         android:targetSdkVersion="34" />
 
+    <!-- Permission pour le Foreground Service (obligatoire depuis Android 9 / API 28) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Permission pour poster des notifications (obligatoire depuis Android 13 / API 33) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <permission
         android:name="com.example.hellotoast.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature" />
@@ -24,7 +29,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:testOnly="true"
-        android:theme="@style/Theme.Lab14Storage" >
+        android:theme="@style/Theme.Lab16Services" >
         <activity
             android:name="com.example.hellotoast.MainActivity"
             android:exported="true" >
@@ -34,6 +39,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Foreground Service déclaré dans le Manifest -->
+        <service
+            android:name="com.example.hellotoast.ChronoService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

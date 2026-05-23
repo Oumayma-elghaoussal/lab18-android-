@@ -1,140 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
+    <!-- Carte du chronomètre -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp">
 
-        <!-- ── Carte : Formulaire ── -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            android:layout_height="wrap_content">
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:padding="16dp"
+            <TextView
+                android:text="⏱️ Chronomètre Service"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorPrimary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Affichage du temps -->
+            <TextView
+                android:id="@+id/tvTime"
+                android:text="@string/label_time"
+                android:textSize="48sp"
+                android:textStyle="bold"
+                android:textColor="#333"
+                android:fontFamily="monospace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Statut du service -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:text="@string/label_status"
+                android:textSize="14sp"
+                android:textColor="#888"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp" />
+
+            <!-- Bouton DÉMARRER -->
+            <Button
+                android:id="@+id/btnStart"
+                android:text="@string/btn_start"
+                android:textSize="16sp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp" />
 
-                <TextView
-                    android:text="Gestion des Étudiants"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp" />
-
-                <EditText
-                    android:id="@+id/etId"
-                    android:hint="@string/hint_id"
-                    android:inputType="number"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/etNom"
-                    android:hint="@string/hint_nom"
-                    android:inputType="textPersonName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/etPrenom"
-                    android:hint="@string/hint_prenom"
-                    android:inputType="textPersonName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp" />
-
-                <!-- Boutons -->
-                <Button
-                    android:id="@+id/btnAjouter"
-                    android:text="@string/btn_ajouter"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp">
-
-                    <Button
-                        android:id="@+id/btnChercher"
-                        android:text="@string/btn_chercher"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-                    <Button
-                        android:id="@+id/btnSupprimer"
-                        android:text="@string/btn_supprimer"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/btnAfficherTous"
-                    android:text="@string/btn_afficher_tous"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.TextButton" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- ── Carte : Résultat ── -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:padding="16dp"
+            <!-- Bouton ARRÊTER -->
+            <Button
+                android:id="@+id/btnStop"
+                android:text="@string/btn_stop"
+                android:textSize="16sp"
+                android:enabled="false"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
-                <TextView
-                    android:text="@string/label_resultat"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorPrimary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/tvResultat"
-                    android:text="—"
-                    android:textSize="14sp"
-                    android:textColor="#333"
-                    android:lineSpacingExtra="4dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+    <!-- Info -->
+    <TextView
+        android:text="Le service continue même si vous quittez l\'application.\nVérifiez dans le tiroir de notifications."
+        android:textSize="12sp"
+        android:textColor="#999"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

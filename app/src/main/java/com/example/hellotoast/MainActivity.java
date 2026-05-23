@@ -1,183 +1,194 @@
 package com.example.hellotoast;
 
+import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.List;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 /**
- * LAB 15 — SQLite : Gestion simple des étudiants.
+ * LAB 16 — MainActivity : contrôle du ChronoService.
  *
- * Interface : Ajouter, Chercher par ID, Supprimer par ID, Afficher tous.
- * Les résultats sont affichés dans le TextView et loggés dans Logcat (tag "MainActivity").
+ * Utilise :
+ *   - startForegroundService() pour lancer le service
+ *   - bindService() pour recevoir les ticks en temps réel
+ *   - stopService() pour tout arrêter
  */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final int REQ_NOTIF = 200;
 
-    private EditText etId, etNom, etPrenom;
-    private TextView tvResultat;
-    private EtudiantService service;
+    private TextView tvTime, tvStatus;
+    private Button btnStart, btnStop;
+
+    // Référence au service (via Bound Service)
+    private ChronoService chronoService;
+    private boolean isBound = false;
+
+    // ════════════════════════════════════════════════
+    //  ServiceConnection — liaison avec le service
+    // ════════════════════════════════════════════════
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "onServiceConnected — lié au service");
+
+            ChronoService.ChronoBinder binder = (ChronoService.ChronoBinder) service;
+            chronoService = binder.getService();
+            isBound = true;
+
+            // Écouter les ticks pour mettre à jour l'UI
+            chronoService.setOnTickListener(seconds -> runOnUiThread(() ->
+                    tvTime.setText(ChronoService.formatTime(seconds))
+            ));
+
+            // Synchroniser l'affichage si le service tournait déjà
+            if (chronoService.isRunning()) {
+                tvTime.setText(ChronoService.formatTime(chronoService.getElapsedSeconds()));
+                setUiState(true);
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.w(TAG, "onServiceDisconnected — service déconnecté");
+            isBound = false;
+            chronoService = null;
+        }
+    };
+
+    // ════════════════════════════════════════════════
+    //  Cycle de vie Activity
+    // ════════════════════════════════════════════════
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialiser le service (crée la base si nécessaire)
-        service = new EtudiantService(this);
+        tvTime   = findViewById(R.id.tvTime);
+        tvStatus = findViewById(R.id.tvStatus);
+        btnStart = findViewById(R.id.btnStart);
+        btnStop  = findViewById(R.id.btnStop);
 
-        // Binding des vues
-        etId      = findViewById(R.id.etId);
-        etNom     = findViewById(R.id.etNom);
-        etPrenom  = findViewById(R.id.etPrenom);
-        tvResultat = findViewById(R.id.tvResultat);
+        // ── DÉMARRER SERVICE ──
+        btnStart.setOnClickListener(v -> {
+            Log.i(TAG, "Bouton DÉMARRER cliqué");
 
-        Button btnAjouter     = findViewById(R.id.btnAjouter);
-        Button btnChercher    = findViewById(R.id.btnChercher);
-        Button btnSupprimer   = findViewById(R.id.btnSupprimer);
-        Button btnAfficherTous = findViewById(R.id.btnAfficherTous);
-
-        // ── Ajouter ──────────────────────────────────
-        btnAjouter.setOnClickListener(v -> {
-            String nom = etNom.getText().toString().trim();
-            String prenom = etPrenom.getText().toString().trim();
-
-            if (nom.isEmpty() || prenom.isEmpty()) {
-                toast("Remplissez Nom et Prénom !");
-                return;
+            // Vérifier la permission POST_NOTIFICATIONS (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
+                    return;
+                }
             }
 
-            Etudiant e = new Etudiant(nom, prenom);
-            long newId = service.create(e);
-
-            if (newId != -1) {
-                String msg = "✅ Étudiant ajouté (id=" + newId + ")\n"
-                        + "Nom : " + nom + "\nPrénom : " + prenom;
-                tvResultat.setText(msg);
-                Log.i(TAG, "Ajouté : " + e + " → id=" + newId);
-                clearFields();
-            } else {
-                tvResultat.setText("❌ Erreur lors de l'insertion");
-            }
+            startChronoService();
         });
 
-        // ── Chercher par ID ──────────────────────────
-        btnChercher.setOnClickListener(v -> {
-            String idStr = etId.getText().toString().trim();
-            if (idStr.isEmpty()) {
-                toast("Entrez un ID !");
-                return;
-            }
-
-            int id = Integer.parseInt(idStr);
-            Etudiant e = service.getById(id);
-
-            if (e != null) {
-                String msg = "📖 Étudiant trouvé :\n"
-                        + "• ID : " + e.getId() + "\n"
-                        + "• Nom : " + e.getNom() + "\n"
-                        + "• Prénom : " + e.getPrenom();
-                tvResultat.setText(msg);
-                Log.i(TAG, "Trouvé : " + e);
-            } else {
-                tvResultat.setText("⚠️ Aucun étudiant avec l'ID " + id);
-                Log.w(TAG, "getById(" + id + ") → introuvable");
-            }
+        // ── ARRÊTER SERVICE ──
+        btnStop.setOnClickListener(v -> {
+            Log.i(TAG, "Bouton ARRÊTER cliqué");
+            stopChronoService();
         });
-
-        // ── Supprimer par ID ─────────────────────────
-        btnSupprimer.setOnClickListener(v -> {
-            String idStr = etId.getText().toString().trim();
-            if (idStr.isEmpty()) {
-                toast("Entrez un ID !");
-                return;
-            }
-
-            int id = Integer.parseInt(idStr);
-            int rows = service.delete(id);
-
-            if (rows > 0) {
-                tvResultat.setText("🗑️ Étudiant id=" + id + " supprimé");
-                Log.i(TAG, "Supprimé : id=" + id);
-                clearFields();
-            } else {
-                tvResultat.setText("⚠️ Aucun étudiant avec l'ID " + id);
-                Log.w(TAG, "delete(" + id + ") → aucune ligne");
-            }
-        });
-
-        // ── Afficher tous ────────────────────────────
-        btnAfficherTous.setOnClickListener(v -> {
-            List<Etudiant> list = service.getAll();
-
-            if (list.isEmpty()) {
-                tvResultat.setText("📭 Aucun étudiant dans la base");
-                Log.i(TAG, "getAll → vide");
-                return;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("📋 ").append(list.size()).append(" étudiant(s) :\n\n");
-
-            for (Etudiant e : list) {
-                sb.append("• [").append(e.getId()).append("] ")
-                  .append(e.getNom()).append(" ")
-                  .append(e.getPrenom()).append("\n");
-            }
-
-            tvResultat.setText(sb.toString().trim());
-            Log.i(TAG, "getAll → " + list.size() + " résultat(s)");
-        });
-
-        // ── Test initial via Logcat ──────────────────
-        testLogcat();
     }
 
-    /**
-     * Test automatique au démarrage : insère 2 étudiants, lit, supprime.
-     * Visible dans Logcat avec le tag "MainActivity".
-     */
-    private void testLogcat() {
-        Log.i(TAG, "═══ TEST LOGCAT DÉBUT ═══");
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Tenter de se lier au service (s'il tourne déjà)
+        Intent intent = new Intent(this, ChronoService.class);
+        bindService(intent, connection, 0); // 0 = ne pas créer si inexistant
+    }
 
-        // Insertion
-        long id1 = service.create(new Etudiant("Alami", "Youssef"));
-        long id2 = service.create(new Etudiant("Benali", "Fatima"));
-        Log.i(TAG, "Insérés : id1=" + id1 + ", id2=" + id2);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Délier (le service continue en Foreground)
+        if (isBound) {
+            if (chronoService != null) {
+                chronoService.setOnTickListener(null);
+            }
+            unbindService(connection);
+            isBound = false;
+            Log.i(TAG, "onStop — unbindService");
+        }
+    }
 
-        // Lecture
-        Etudiant e1 = service.getById((int) id1);
-        Log.i(TAG, "Lu : " + e1);
+    // ════════════════════════════════════════════════
+    //  Démarrer / Arrêter le service
+    // ════════════════════════════════════════════════
 
-        // Liste
-        List<Etudiant> all = service.getAll();
-        Log.i(TAG, "Tous : " + all);
+    private void startChronoService() {
+        Intent intent = new Intent(this, ChronoService.class);
 
-        // Suppression
-        service.delete((int) id2);
-        Log.i(TAG, "Après suppression de id2 :");
-        List<Etudiant> afterDelete = service.getAll();
-        for (Etudiant e : afterDelete) {
-            Log.i(TAG, "  → " + e);
+        // startForegroundService() obligatoire depuis Android 8.0 (API 26)
+        ContextCompat.startForegroundService(this, intent);
+
+        // Se lier pour recevoir les mises à jour en temps réel
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+        setUiState(true);
+        Toast.makeText(this, "Service démarré !", Toast.LENGTH_SHORT).show();
+    }
+
+    private void stopChronoService() {
+        // Délier d'abord
+        if (isBound) {
+            if (chronoService != null) {
+                chronoService.setOnTickListener(null);
+            }
+            unbindService(connection);
+            isBound = false;
         }
 
-        Log.i(TAG, "═══ TEST LOGCAT FIN ═══");
+        // Arrêter le service
+        Intent intent = new Intent(this, ChronoService.class);
+        stopService(intent);
+
+        setUiState(false);
+        tvTime.setText("00:00:00");
+        Toast.makeText(this, "Service arrêté", Toast.LENGTH_SHORT).show();
     }
 
-    private void clearFields() {
-        etId.setText("");
-        etNom.setText("");
-        etPrenom.setText("");
+    // ════════════════════════════════════════════════
+    //  UI helpers
+    // ════════════════════════════════════════════════
+
+    private void setUiState(boolean running) {
+        btnStart.setEnabled(!running);
+        btnStop.setEnabled(running);
+        tvStatus.setText(running ? "🟢 Service en cours…" : "🔴 Service arrêté");
     }
 
-    private void toast(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_NOTIF) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startChronoService();
+            } else {
+                Toast.makeText(this,
+                        "Permission notifications requise pour le Foreground Service",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

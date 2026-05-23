@@ -1,14 +1,14 @@
-# LAB 15 — SQLite et Android : Gestion simple des étudiants
+# LAB 16 — Maîtriser les Services dans une Application Android
 
-## Objectifs d'apprentissage
+## Objectifs du lab
 
 | # | Objectif |
 |---|----------|
-| 1 | Créer un **modèle métier** `Etudiant` |
-| 2 | Initialiser une base SQLite locale avec **SQLiteOpenHelper** |
-| 3 | Implémenter des opérations **CRUD** via un service dédié |
-| 4 | Tester les services via **Logcat** |
-| 5 | Développer une **interface simple** (Ajouter, Chercher, Supprimer) |
+| 1 | Créer un **Foreground Service** (obligatoire depuis Android 8.0) |
+| 2 | Afficher une **notification persistante** avec le temps en direct |
+| 3 | Utiliser un **Bound Service** pour communiquer avec l'Activity |
+| 4 | **Démarrage / arrêt** depuis l'interface |
+| 5 | Comprendre le **cycle de vie** des Services, `onStartCommand`, `onBind`, `START_STICKY` |
 
 ---
 
@@ -16,13 +16,11 @@
 
 ```
 app/src/main/java/com/example/hellotoast/
-├── Etudiant.java          ← Modèle métier
-├── MySQLiteHelper.java    ← SQLiteOpenHelper (création de la BDD)
-├── EtudiantService.java   ← Service CRUD (insert, select, update, delete)
-└── MainActivity.java      ← Interface + tests Logcat
+├── ChronoService.java     ← Foreground + Bound Service (chronomètre)
+└── MainActivity.java      ← Interface de contrôle
 
 app/src/main/res/
-├── layout/activity_main.xml   ← UI (formulaire + résultats)
+├── layout/activity_main.xml   ← UI (timer + boutons start/stop)
 └── values/
     ├── strings.xml
     ├── colors.xml
@@ -31,111 +29,174 @@ app/src/main/res/
 
 ---
 
-## Classe 1 — `Etudiant.java` (Modèle)
+## Concepts clés expliqués
 
-Représente un étudiant dans la base.
+### 1. Foreground Service (obligatoire depuis Android 8.0)
 
-| Champ    | Type     | Description |
-|----------|----------|-------------|
-| `id`     | `int`    | Clé primaire (AUTO_INCREMENT) |
-| `nom`    | `String` | Nom de famille |
-| `prenom` | `String` | Prénom |
+Depuis **Android 8.0 (API 26)**, un service qui tourne en arrière-plan **doit** afficher une notification. Sinon, le système le tue après quelques secondes.
 
-Deux constructeurs :
-- `Etudiant(int id, String nom, String prenom)` — lecture depuis la BDD
-- `Etudiant(String nom, String prenom)` — insertion (id généré automatiquement)
+```java
+// Lancer un Foreground Service
+ContextCompat.startForegroundService(this, intent);
 
----
-
-## Classe 2 — `MySQLiteHelper.java` (SQLiteOpenHelper)
-
-| Élément | Valeur |
-|---------|--------|
-| **Nom de la base** | `etudiants.db` |
-| **Version** | `1` |
-| **Table** | `etudiant` |
-
-**Script de création :**
-```sql
-CREATE TABLE etudiant (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT NOT NULL,
-    prenom TEXT NOT NULL
-);
+// Dans le Service (dans les 5 premières secondes !)
+startForeground(NOTIFICATION_ID, notification);
 ```
 
-**Méthodes clés :**
-- `onCreate(SQLiteDatabase db)` — exécute le `CREATE TABLE`
-- `onUpgrade(...)` — `DROP TABLE` + `onCreate` (pour les montées de version)
+### 2. `onStartCommand()` et `START_STICKY`
+
+```java
+@Override
+public int onStartCommand(Intent intent, int flags, int startId) {
+    startForeground(NOTIFICATION_ID, buildNotification("00:00:00"));
+    startTimer();
+    return START_STICKY;  // Le système relance le service s'il est tué
+}
+```
+
+| Valeur de retour | Comportement |
+|---|---|
+| `START_STICKY` | Relancé automatiquement (intent = null) |
+| `START_NOT_STICKY` | Pas relancé |
+| `START_REDELIVER_INTENT` | Relancé avec le dernier Intent |
+
+### 3. Bound Service (communication Activity ↔ Service)
+
+Le pattern **Binder** permet à l'Activity d'appeler directement les méthodes du Service :
+
+```java
+// Dans le Service
+public class ChronoBinder extends Binder {
+    public ChronoService getService() {
+        return ChronoService.this;
+    }
+}
+
+@Override
+public IBinder onBind(Intent intent) {
+    return binder;
+}
+
+// Dans l'Activity
+bindService(intent, connection, Context.BIND_AUTO_CREATE);
+// → connection.onServiceConnected() reçoit le Binder
+```
+
+### 4. Notification Channel (obligatoire depuis Android 8.0)
+
+```java
+NotificationChannel channel = new NotificationChannel(
+    CHANNEL_ID,
+    "Chronomètre",
+    NotificationManager.IMPORTANCE_LOW  // pas de son
+);
+notificationManager.createNotificationChannel(channel);
+```
+
+### 5. Permission POST_NOTIFICATIONS (Android 13+)
+
+Depuis **Android 13 (API 33)**, il faut demander la permission à l'exécution :
+
+```xml
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
 
 ---
 
-## Classe 3 — `EtudiantService.java` (CRUD)
+## Cycle de vie du Service
 
-| Méthode | SQL | Description |
-|---------|-----|-------------|
-| `create(Etudiant)` | `INSERT` | Insère un étudiant, retourne l'id généré |
-| `getById(int id)` | `SELECT ... WHERE id = ?` | Retourne un `Etudiant` ou `null` |
-| `getAll()` | `SELECT *` | Retourne la liste complète |
-| `update(Etudiant)` | `UPDATE ... WHERE id = ?` | Met à jour nom/prénom |
-| `delete(int id)` | `DELETE ... WHERE id = ?` | Supprime par id |
-
-**Bonnes pratiques appliquées :**
-- Utilisation de `ContentValues` pour l'insertion et la mise à jour
-- Requêtes paramétrées (`?`) pour éviter l'injection SQL
-- `db.close()` après chaque opération
-- `Log.i()` / `Log.w()` pour tracer chaque opération dans Logcat
-- Méthode utilitaire `cursorToEtudiant(Cursor)` pour la conversion
-
----
-
-## Classe 4 — `MainActivity.java` (Interface)
-
-### Interface utilisateur
-
-L'écran contient :
-- **3 champs** : ID, Nom, Prénom
-- **4 boutons** :
-  - **Ajouter** — insère un étudiant (nom + prénom requis)
-  - **Chercher par ID** — affiche l'étudiant correspondant
-  - **Supprimer par ID** — supprime l'étudiant correspondant
-  - **Afficher tous** — liste tous les étudiants
-- **Zone résultat** — affiche le résultat de chaque opération
-
-### Test automatique Logcat
-
-Au démarrage, `testLogcat()` exécute automatiquement :
-1. Insertion de 2 étudiants test ("Alami Youssef", "Benali Fatima")
-2. Lecture par ID
-3. Liste de tous
-4. Suppression d'un étudiant
-5. Re-liste pour vérifier
-
-> 💡 Ouvrez **Logcat** dans Android Studio, filtrez par tag `MainActivity` ou `EtudiantService` pour voir les traces.
+```
+startForegroundService()
+    ↓
+onCreate()  ← créé une seule fois
+    ↓
+onStartCommand()  ← à chaque startService()
+    ↓                 retourne START_STICKY
+[Service tourne en Foreground avec notification]
+    ↓
+bindService() → onBind() → Activity reçoit le Binder
+    ↓
+[Communication directe Activity ↔ Service]
+    ↓
+unbindService() → onUnbind()
+    ↓
+stopService() → onDestroy()
+```
 
 ---
 
-## Concepts SQLite clés
+## Fichiers détaillés
 
-### SQLiteOpenHelper
-- Gère la **création** et les **mises à jour** de la base
-- `getWritableDatabase()` — ouvre en écriture
-- `getReadableDatabase()` — ouvre en lecture
+### `ChronoService.java`
 
-### ContentValues
-- Dictionnaire clé-valeur utilisé pour `INSERT` et `UPDATE`
-- Plus sûr que la concaténation SQL
+| Méthode | Rôle |
+|---|---|
+| `onCreate()` | Crée le Handler et le NotificationChannel |
+| `onStartCommand()` | Lance `startForeground()` + démarre le timer |
+| `onBind()` | Retourne le `ChronoBinder` à l'Activity |
+| `onUnbind()` | Supprime le listener |
+| `onDestroy()` | Arrête le timer |
+| `startTimer()` | Planifie un Runnable toutes les secondes |
+| `stopTimer()` | Annule le Runnable |
+| `buildNotification()` | Construit la notification avec le temps actuel |
+| `setOnTickListener()` | API pour l'Activity (callback chaque seconde) |
 
-### Cursor
-- Résultat d'une requête `SELECT`
-- Parcours avec `moveToFirst()` / `moveToNext()`
-- Accès aux colonnes via `getColumnIndexOrThrow()`
+### `MainActivity.java`
+
+| Méthode | Rôle |
+|---|---|
+| `startChronoService()` | `startForegroundService()` + `bindService()` |
+| `stopChronoService()` | `unbindService()` + `stopService()` |
+| `onStart()` | Tente de se lier au service (s'il tourne déjà) |
+| `onStop()` | Se délie (le service continue en Foreground) |
+| `ServiceConnection` | Reçoit le Binder, configure le tick listener |
+
+---
+
+## Permissions
+
+```xml
+<!-- Foreground Service (API 28+) -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+<!-- Notifications (API 33+) -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+---
+
+## Comment tester
+
+1. **Lancez** l'app sur émulateur ou appareil (API 26+)
+2. Cliquez **DÉMARRER SERVICE** → la notification apparaît, le chrono tourne
+3. **Quittez l'app** complètement (bouton retour ou swipe) → le service **continue**
+4. Ouvrez le **tiroir de notifications** → le temps continue à défiler
+5. Cliquez sur la notification → retour dans l'app, le chrono est synchronisé
+6. Cliquez **ARRÊTER SERVICE** → tout s'arrête proprement
+
+### Vérification Logcat
+
+Filtrez par tag `ChronoService` ou `MainActivity` :
+
+```
+I/ChronoService: onCreate() — Service créé
+I/ChronoService: NotificationChannel créé : chrono_channel
+I/ChronoService: onStartCommand() — startId=1, flags=0
+I/ChronoService: Timer démarré
+I/ChronoService: onBind() — Activity liée au service
+I/MainActivity: onServiceConnected — lié au service
+...
+I/MainActivity: Bouton ARRÊTER cliqué
+I/ChronoService: onUnbind() — Activity déliée
+I/ChronoService: onDestroy() — Service détruit
+I/ChronoService: Timer arrêté
+```
 
 ---
 
 ## Dépendances
 
-**Aucune dépendance externe** — SQLite est intégré dans Android.
+**Aucune dépendance externe** — les Services et Notifications sont natifs Android.
 
 ```groovy
 dependencies {
@@ -147,26 +208,14 @@ dependencies {
 
 ---
 
-## Comment exécuter
+## Bonnes pratiques appliquées
 
-1. Ouvrir le projet dans **Android Studio**
-2. **Sync Gradle**
-3. **Run** sur émulateur ou appareil (API 26+)
-4. Observer le **Logcat** (tag `MainActivity`) pour le test automatique
-5. Utiliser l'interface pour ajouter, chercher et supprimer des étudiants
-
----
-
-## Vérification Logcat
-
-Filtrez Logcat avec `MainActivity` ou `EtudiantService` :
-
-```
-I/MainActivity: ═══ TEST LOGCAT DÉBUT ═══
-I/EtudiantService: create → id=1 | Etudiant{id=0, nom='Alami', prenom='Youssef'}
-I/EtudiantService: create → id=2 | Etudiant{id=0, nom='Benali', prenom='Fatima'}
-I/EtudiantService: getById(1) → Etudiant{id=1, nom='Alami', prenom='Youssef'}
-I/EtudiantService: getAll → 2 étudiant(s)
-I/EtudiantService: delete(2) → 1 ligne(s)
-I/MainActivity: ═══ TEST LOGCAT FIN ═══
-```
+| Pratique | Détail |
+|---|---|
+| ✅ `startForeground()` immédiat | Dans les 5 premières secondes (sinon crash) |
+| ✅ `START_STICKY` | Relancé si tué par le système |
+| ✅ Notification `IMPORTANCE_LOW` | Pas de son à chaque mise à jour |
+| ✅ `setOnlyAlertOnce(true)` | Évite le bip répété |
+| ✅ `PendingIntent.FLAG_IMMUTABLE` | Requis depuis API 31 |
+| ✅ Unbind dans `onStop()` | Évite les fuites de mémoire |
+| ✅ Permission runtime (API 33) | `POST_NOTIFICATIONS` demandée au clic |
