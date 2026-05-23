@@ -1,13 +1,21 @@
 <resources>
-    <string name="app_name">Lab16 – Chrono Service</string>
+    <string name="app_name">Lab17 – BroadcastReceiver</string>
 
-    <string name="btn_start">DÉMARRER SERVICE</string>
-    <string name="btn_stop">ARRÊTER SERVICE</string>
-    <string name="label_time">00:00:00</string>
-    <string name="label_status">Service arrêté</string>
+    <!-- Section 1 : Mode Avion (dynamique) -->
+    <string name="section_airplane">1 — Receiver dynamique : Mode Avion</string>
+    <string name="airplane_status">Statut : inconnu</string>
 
-    <!-- Notification -->
-    <string name="notif_channel_name">Chronomètre</string>
-    <string name="notif_channel_desc">Notification du chronomètre en cours</string>
-    <string name="notif_title">Chronomètre actif</string>
+    <!-- Section 2 : BOOT_COMPLETED (statique) -->
+    <string name="section_boot">2 — Receiver statique : BOOT_COMPLETED</string>
+    <string name="boot_info">Ce receiver est déclaré dans le Manifest.\nIl se déclenche au démarrage du téléphone.\nVérifiez le Logcat après un reboot.</string>
+
+    <!-- Section 3 : Broadcast custom -->
+    <string name="section_custom">3 — Broadcast custom (interne)</string>
+    <string name="hint_message">Message à diffuser</string>
+    <string name="btn_send_broadcast">Envoyer Broadcast</string>
+    <string name="custom_result">En attente d\'un broadcast…</string>
+
+    <!-- Section 4 : Journal des événements -->
+    <string name="section_log">📋 Journal des événements</string>
+    <string name="btn_clear_log">Effacer le journal</string>
 </resources>

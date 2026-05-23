@@ -1,78 +1,84 @@
 package com.example.hellotoast;
 
-import android.Manifest;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
- * LAB 16 — MainActivity : contrôle du ChronoService.
+ * LAB 17 — BroadcastReceiver Demo.
  *
- * Utilise :
- *   - startForegroundService() pour lancer le service
- *   - bindService() pour recevoir les ticks en temps réel
- *   - stopService() pour tout arrêter
+ * 1) Receiver DYNAMIQUE : détecte ACTION_AIRPLANE_MODE_CHANGED
+ * 2) Receiver STATIQUE  : BootReceiver (BOOT_COMPLETED, déclaré dans Manifest)
+ * 3) Broadcast CUSTOM    : envoie et reçoit un broadcast interne
+ * 4) Journal des événements : affiche tous les broadcasts reçus
  */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final int REQ_NOTIF = 200;
 
-    private TextView tvTime, tvStatus;
-    private Button btnStart, btnStop;
+    // Action custom pour le broadcast interne
+    public static final String ACTION_CUSTOM =
+            "com.example.hellotoast.ACTION_CUSTOM_BROADCAST";
 
-    // Référence au service (via Bound Service)
-    private ChronoService chronoService;
-    private boolean isBound = false;
+    private TextView tvAirplaneStatus, tvCustomResult, tvLog;
+    private EditText etMessage;
 
-    // ════════════════════════════════════════════════
-    //  ServiceConnection — liaison avec le service
-    // ════════════════════════════════════════════════
-    private final ServiceConnection connection = new ServiceConnection() {
+    // StringBuilder pour le journal
+    private final StringBuilder logBuilder = new StringBuilder();
+
+    // ── Receiver DYNAMIQUE : Mode Avion ──────────────
+    private final BroadcastReceiver airplaneReceiver = new BroadcastReceiver() {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "onServiceConnected — lié au service");
+        public void onReceive(Context context, Intent intent) {
+            // Lire l'état du mode avion
+            boolean isAirplaneOn = Settings.Global.getInt(
+                    context.getContentResolver(),
+                    Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
 
-            ChronoService.ChronoBinder binder = (ChronoService.ChronoBinder) service;
-            chronoService = binder.getService();
-            isBound = true;
+            String status = isAirplaneOn
+                    ? "✈️ Mode Avion : ACTIVÉ"
+                    : "📶 Mode Avion : DÉSACTIVÉ";
 
-            // Écouter les ticks pour mettre à jour l'UI
-            chronoService.setOnTickListener(seconds -> runOnUiThread(() ->
-                    tvTime.setText(ChronoService.formatTime(seconds))
-            ));
+            tvAirplaneStatus.setText(status);
+            appendLog("AIRPLANE_MODE → " + (isAirplaneOn ? "ON" : "OFF"));
 
-            // Synchroniser l'affichage si le service tournait déjà
-            if (chronoService.isRunning()) {
-                tvTime.setText(ChronoService.formatTime(chronoService.getElapsedSeconds()));
-                setUiState(true);
-            }
+            Log.i(TAG, "airplaneReceiver.onReceive() → " + status);
+            Toast.makeText(context, status, Toast.LENGTH_SHORT).show();
         }
+    };
 
+    // ── Receiver DYNAMIQUE : Broadcast custom ────────
+    private final BroadcastReceiver customReceiver = new BroadcastReceiver() {
         @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.w(TAG, "onServiceDisconnected — service déconnecté");
-            isBound = false;
-            chronoService = null;
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra("message");
+            if (message == null) message = "(vide)";
+
+            tvCustomResult.setText("📨 Reçu : " + message);
+            appendLog("CUSTOM_BROADCAST → \"" + message + "\"");
+
+            Log.i(TAG, "customReceiver.onReceive() → " + message);
+            Toast.makeText(context, "Broadcast reçu : " + message, Toast.LENGTH_SHORT).show();
         }
     };
 
     // ════════════════════════════════════════════════
-    //  Cycle de vie Activity
+    //  Cycle de vie
     // ════════════════════════════════════════════════
 
     @Override
@@ -80,115 +86,89 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvTime   = findViewById(R.id.tvTime);
-        tvStatus = findViewById(R.id.tvStatus);
-        btnStart = findViewById(R.id.btnStart);
-        btnStop  = findViewById(R.id.btnStop);
+        // Binding des vues
+        tvAirplaneStatus = findViewById(R.id.tvAirplaneStatus);
+        tvCustomResult   = findViewById(R.id.tvCustomResult);
+        tvLog            = findViewById(R.id.tvLog);
+        etMessage        = findViewById(R.id.etMessage);
+        Button btnSend   = findViewById(R.id.btnSendBroadcast);
+        Button btnClear  = findViewById(R.id.btnClearLog);
 
-        // ── DÉMARRER SERVICE ──
-        btnStart.setOnClickListener(v -> {
-            Log.i(TAG, "Bouton DÉMARRER cliqué");
+        // ── Enregistrement DYNAMIQUE : Mode Avion ──
+        IntentFilter airplaneFilter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(airplaneReceiver, airplaneFilter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(airplaneReceiver, airplaneFilter);
+        }
+        appendLog("Receiver Mode Avion enregistré (dynamique)");
+        Log.i(TAG, "airplaneReceiver enregistré");
 
-            // Vérifier la permission POST_NOTIFICATIONS (Android 13+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
-                    return;
-                }
+        // ── Enregistrement DYNAMIQUE : Broadcast custom ──
+        IntentFilter customFilter = new IntentFilter(ACTION_CUSTOM);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(customReceiver, customFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(customReceiver, customFilter);
+        }
+        appendLog("Receiver Custom enregistré (dynamique)");
+        Log.i(TAG, "customReceiver enregistré");
+
+        // ── Lire l'état actuel du mode avion ──
+        boolean airplaneNow = Settings.Global.getInt(
+                getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
+        tvAirplaneStatus.setText(airplaneNow
+                ? "✈️ Mode Avion : ACTIVÉ"
+                : "📶 Mode Avion : DÉSACTIVÉ");
+
+        // ── Bouton : Envoyer broadcast custom ──
+        btnSend.setOnClickListener(v -> {
+            String msg = etMessage.getText().toString().trim();
+            if (msg.isEmpty()) {
+                Toast.makeText(this, "Entrez un message !", Toast.LENGTH_SHORT).show();
+                return;
             }
 
-            startChronoService();
+            Intent intent = new Intent(ACTION_CUSTOM);
+            intent.putExtra("message", msg);
+
+            // setPackage() pour cibler uniquement notre app (bonne pratique sécurité)
+            intent.setPackage(getPackageName());
+
+            sendBroadcast(intent);
+
+            appendLog("Broadcast envoyé : \"" + msg + "\"");
+            Log.i(TAG, "sendBroadcast() → " + msg);
+            etMessage.setText("");
         });
 
-        // ── ARRÊTER SERVICE ──
-        btnStop.setOnClickListener(v -> {
-            Log.i(TAG, "Bouton ARRÊTER cliqué");
-            stopChronoService();
+        // ── Bouton : Effacer le journal ──
+        btnClear.setOnClickListener(v -> {
+            logBuilder.setLength(0);
+            tvLog.setText("");
         });
+
+        appendLog("Application démarrée");
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        // Tenter de se lier au service (s'il tourne déjà)
-        Intent intent = new Intent(this, ChronoService.class);
-        bindService(intent, connection, 0); // 0 = ne pas créer si inexistant
-    }
+    protected void onDestroy() {
+        super.onDestroy();
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Délier (le service continue en Foreground)
-        if (isBound) {
-            if (chronoService != null) {
-                chronoService.setOnTickListener(null);
-            }
-            unbindService(connection);
-            isBound = false;
-            Log.i(TAG, "onStop — unbindService");
-        }
+        // Désenregistrer les receivers dynamiques (éviter les fuites mémoire)
+        unregisterReceiver(airplaneReceiver);
+        unregisterReceiver(customReceiver);
+
+        Log.i(TAG, "Receivers désenregistrés dans onDestroy()");
     }
 
     // ════════════════════════════════════════════════
-    //  Démarrer / Arrêter le service
+    //  Journal des événements
     // ════════════════════════════════════════════════
 
-    private void startChronoService() {
-        Intent intent = new Intent(this, ChronoService.class);
-
-        // startForegroundService() obligatoire depuis Android 8.0 (API 26)
-        ContextCompat.startForegroundService(this, intent);
-
-        // Se lier pour recevoir les mises à jour en temps réel
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
-
-        setUiState(true);
-        Toast.makeText(this, "Service démarré !", Toast.LENGTH_SHORT).show();
-    }
-
-    private void stopChronoService() {
-        // Délier d'abord
-        if (isBound) {
-            if (chronoService != null) {
-                chronoService.setOnTickListener(null);
-            }
-            unbindService(connection);
-            isBound = false;
-        }
-
-        // Arrêter le service
-        Intent intent = new Intent(this, ChronoService.class);
-        stopService(intent);
-
-        setUiState(false);
-        tvTime.setText("00:00:00");
-        Toast.makeText(this, "Service arrêté", Toast.LENGTH_SHORT).show();
-    }
-
-    // ════════════════════════════════════════════════
-    //  UI helpers
-    // ════════════════════════════════════════════════
-
-    private void setUiState(boolean running) {
-        btnStart.setEnabled(!running);
-        btnStop.setEnabled(running);
-        tvStatus.setText(running ? "🟢 Service en cours…" : "🔴 Service arrêté");
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_NOTIF) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startChronoService();
-            } else {
-                Toast.makeText(this,
-                        "Permission notifications requise pour le Foreground Service",
-                        Toast.LENGTH_LONG).show();
-            }
-        }
+    private void appendLog(String event) {
+        String time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        logBuilder.insert(0, "[" + time + "] " + event + "\n");
+        tvLog.setText(logBuilder.toString().trim());
     }
 }

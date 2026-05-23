@@ -8,10 +8,8 @@
         android:minSdkVersion="26"
         android:targetSdkVersion="34" />
 
-    <!-- Permission pour le Foreground Service (obligatoire depuis Android 9 / API 28) -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- Permission pour poster des notifications (obligatoire depuis Android 13 / API 33) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Permission pour détecter BOOT_COMPLETED -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <permission
         android:name="com.example.hellotoast.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -29,7 +27,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:testOnly="true"
-        android:theme="@style/Theme.Lab16Services" >
+        android:theme="@style/Theme.Lab17Receiver" >
+
+        <!-- MainActivity (launcher) -->
         <activity
             android:name="com.example.hellotoast.MainActivity"
             android:exported="true" >
@@ -40,12 +40,15 @@
             </intent-filter>
         </activity>
 
-        <!-- Foreground Service déclaré dans le Manifest -->
-        <service
-            android:name="com.example.hellotoast.ChronoService"
+        <!-- Receiver STATIQUE : BOOT_COMPLETED -->
+        <receiver
+            android:name="com.example.hellotoast.BootReceiver"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse" />
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.startup.InitializationProvider"
